@@ -19,9 +19,37 @@ class DirectusAuthRepository implements IAuthRepository {
     this.syncConnector,
   });
 
+  static const _anonymousGuest = AppUser(
+    id: 'guest',
+    role: 'anonymous',
+    isAnonymous: true,
+    displayName: 'Guest Reader',
+  );
+
   @override
   Future<AppUser> getCurrentUser() async {
-    throw UnimplementedError();
+    final token = await secureStorage.read(key: 'access_token');
+    if (token == null) {
+      return _anonymousGuest;
+    }
+    
+    try {
+      final response = await _fetchWithAuth('/users/me');
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        return AppUser(
+          id: result['data']['id'],
+          email: result['data']['email'],
+          displayName: result['data']['first_name'],
+          role: result['data']['role'],
+          isAnonymous: false,
+        );
+      }
+    } catch (e) {
+      // Fallback to guest on error
+    }
+    
+    return _anonymousGuest;
   }
 
   bool _isRefreshing = false;

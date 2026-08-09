@@ -195,6 +195,7 @@ class MyLibraryPage extends StatefulWidget {
 class _MyLibraryPageState extends State<MyLibraryPage> {
   AppUser? _user;
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -210,11 +211,13 @@ class _MyLibraryPageState extends State<MyLibraryPage> {
         setState(() {
           _user = user;
           _loading = false;
+          _error = null;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
+          _error = e.toString();
           _loading = false;
         });
       }
@@ -233,6 +236,27 @@ class _MyLibraryPageState extends State<MyLibraryPage> {
       return Scaffold(
         appBar: AppBar(title: const Text('My Library')),
         body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('My Library')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Failed to load user state: $_error', textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                FilledButton(onPressed: _loadUser, child: const Text('Retry')),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
