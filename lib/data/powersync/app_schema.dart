@@ -279,4 +279,18 @@ const appSchema = Schema([
     Index('follower', [IndexedColumn('follower')]),
     Index('following', [IndexedColumn('following')]),
   ]),
+  Table('user_books', [
+    Column.text('profile'),
+    Column.text('book'),
+    Column.text('reading_status'),
+    Column.text('selected_text_edition'),
+    Column.text('selected_audio_edition'),
+    Column.integer('is_favorite'),
+    Column.text('date_started'),
+    Column.text('date_finished'),
+    Column.text('last_activity_at'),
+    Column.text('notes'),
+  ], indexes: [
+    Index('profile_book', [IndexedColumn('profile'), IndexedColumn('book')]),
+  ]),
 ]);
