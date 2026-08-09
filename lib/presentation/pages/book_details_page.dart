@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../domain/repositories/library_repository.dart';
 import '../../domain/models/book_details.dart';
 import 'reader_page.dart';
-import 'listen_page.dart';
+import '../../domain/models/audio_edition.dart' as ae;
+import '../../domain/models/audio_chapter.dart' as ac;
+import '../../application/services/audio_player_service.dart';
 
 class BookDetailsPage extends StatefulWidget {
   final String slug;
@@ -296,17 +298,61 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
 
   void _onListenPressed() {
     if (_selectedAudioEdition != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ListenPage(slug: widget.slug), // Assuming ListenPage takes book slug for now
-        ),
-      );
+      if (_bookFuture != null) {
+        _bookFuture.then((book) {
+          if (book != null) {
+            _playAudioChapter(_selectedAudioEdition!, book, 0);
+          }
+        });
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No audio edition available.')),
       );
     }
+  }
+
+  void _playAudioChapter(AudioEdition detailAudioEdition, BookDetails book, int index) {
+    final mappedChapters = <ac.AudioChapter>[];
+    for (final part in detailAudioEdition.parts) {
+      for (final chapter in part.audioChapters) {
+        mappedChapters.add(ac.AudioChapter(
+          id: chapter.id,
+          bookId: book.id,
+          editionId: detailAudioEdition.id,
+          title: chapter.title,
+          slug: chapter.slug,
+          audioFileUrl: chapter.audioFile ?? '',
+          durationSeconds: chapter.durationSeconds ?? 0,
+          linkedTextChapter: chapter.linkedTextChapter,
+        ));
+      }
+    }
+    for (final chapter in detailAudioEdition.audioChapters) {
+        mappedChapters.add(ac.AudioChapter(
+          id: chapter.id,
+          bookId: book.id,
+          editionId: detailAudioEdition.id,
+          title: chapter.title,
+          slug: chapter.slug,
+          audioFileUrl: chapter.audioFile ?? '',
+          durationSeconds: chapter.durationSeconds ?? 0,
+          linkedTextChapter: chapter.linkedTextChapter,
+        ));
+    }
+
+    final audioEdition = ae.AudioEdition(
+      id: detailAudioEdition.id,
+      bookId: book.id,
+      title: detailAudioEdition.title ?? book.title,
+      slug: detailAudioEdition.slug ?? book.slug,
+      language: detailAudioEdition.language ?? 'en',
+      cover: detailAudioEdition.cover ?? book.coverUrl,
+      narratorName: detailAudioEdition.narratorName,
+      chapters: mappedChapters,
+    );
+
+    context.read<AudioPlayerService>().playEdition(audioEdition, index);
   }
 
   void _showEditionSelector(BuildContext context, List<dynamic> editions, bool isText) {
@@ -403,26 +449,41 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
       if (audioEdition.parts.isEmpty && audioEdition.audioChapters.isEmpty) {
         return const Center(child: Text('No audio chapters found for this edition.'));
       }
-      return ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          if (audioEdition.parts.isNotEmpty)
-            ...audioEdition.parts.map((part) => ExpansionTile(
-              title: Text(part.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: part.description != null ? Text(part.description!) : null,
-              children: part.audioChapters.map((chapter) => ListTile(
-                title: Text(chapter.title),
-                trailing: const Icon(Icons.play_circle_outline),
-                onTap: _onListenPressed, // Audio usually plays sequentially, simplified here
-              )).toList(),
-            ))
-          else if (audioEdition.audioChapters.isNotEmpty)
-            ...audioEdition.audioChapters.map((chapter) => ListTile(
+      
+      final children = <Widget>[];
+      int globalIndex = 0;
+      
+      if (audioEdition.parts.isNotEmpty) {
+        for (final part in audioEdition.parts) {
+          final partChildren = <Widget>[];
+          for (final chapter in part.audioChapters) {
+            final currentIndex = globalIndex++;
+            partChildren.add(ListTile(
               title: Text(chapter.title),
               trailing: const Icon(Icons.play_circle_outline),
-              onTap: _onListenPressed,
-            )),
-        ],
+              onTap: () => _playAudioChapter(audioEdition, book, currentIndex),
+            ));
+          }
+          children.add(ExpansionTile(
+            title: Text(part.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: part.description != null ? Text(part.description!) : null,
+            children: partChildren,
+          ));
+        }
+      } else if (audioEdition.audioChapters.isNotEmpty) {
+        for (final chapter in audioEdition.audioChapters) {
+          final currentIndex = globalIndex++;
+          children.add(ListTile(
+            title: Text(chapter.title),
+            trailing: const Icon(Icons.play_circle_outline),
+            onTap: () => _playAudioChapter(audioEdition, book, currentIndex),
+          ));
+        }
+      }
+      
+      return ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: children,
       );
     }
 
