@@ -1,6 +1,7 @@
 class AudioChapter {
   final String id;
   final String bookId;
+  final String editionId;
   final String title;
   final String slug;
   final String audioFileUrl;
@@ -10,6 +11,7 @@ class AudioChapter {
   AudioChapter({
     required this.id,
     required this.bookId,
+    required this.editionId,
     required this.title,
     required this.slug,
     required this.audioFileUrl,
@@ -21,6 +23,7 @@ class AudioChapter {
     return AudioChapter(
       id: json['id'] as String,
       bookId: json['bookId'] as String? ?? '',
+      editionId: json['editionId'] as String? ?? '',
       title: json['title'] as String,
       slug: json['slug'] as String,
       audioFileUrl: json['audioFileUrl'] as String,
