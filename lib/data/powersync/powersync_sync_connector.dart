@@ -39,7 +39,12 @@ class AnonymousConnector extends ps.PowerSyncBackendConnector {
 
   @override
   Future<void> uploadData(ps.PowerSyncDatabase database) async {
-    // Read-only catalog; nothing to upload for anonymous guest
+    final batch = await database.getCrudBatch();
+    if (batch == null) return;
+    
+    // For now, we are in read-only guest mode. Just complete the batch to discard local changes 
+    // and prevent the upload loop from getting permanently blocked.
+    await batch.complete();
   }
 }
 
