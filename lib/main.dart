@@ -14,6 +14,8 @@ import 'data/directus/directus_auth_repository.dart';
 import 'domain/repositories/library_repository.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'presentation/pages/app_shell.dart';
+import 'application/services/audio_player_service.dart';
+import 'presentation/widgets/global_audio_player.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +63,9 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<ILibraryRepository>.value(value: libraryRepository),
         Provider<IAuthRepository>.value(value: authRepository),
+        ChangeNotifierProvider<AudioPlayerService>(
+          create: (_) => AudioPlayerService(libraryRepository),
+        ),
       ],
       child: MaterialApp(
         title: 'Edumynt Library',
@@ -79,6 +84,14 @@ class MyApp extends StatelessWidget {
           ),
           useMaterial3: true,
         ),
+        builder: (context, child) {
+          return Stack(
+            children: [
+              if (child != null) child,
+              const GlobalAudioPlayer(),
+            ],
+          );
+        },
         home: const AppShell(),
       ),
     );

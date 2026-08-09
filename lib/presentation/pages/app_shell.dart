@@ -102,7 +102,7 @@ class _BooksGridPageState extends State<BooksGridPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _books.isEmpty
-              ? const Center(child: Text('No books in catalog'))
+              ? const Center(child: Text('No books found.'))
               : GridView.builder(
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
