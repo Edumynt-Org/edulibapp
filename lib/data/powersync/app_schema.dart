@@ -271,14 +271,6 @@ const appSchema = Schema([
     Index('shelf_id', [IndexedColumn('shelf_id')]),
     Index('book_id', [IndexedColumn('book_id')]),
   ]),
-  Table('follows', [
-    Column.text('follower'),
-    Column.text('following'),
-    Column.text('date_created'),
-  ], indexes: [
-    Index('follower', [IndexedColumn('follower')]),
-    Index('following', [IndexedColumn('following')]),
-  ]),
   Table('user_books', [
     Column.text('profile'),
     Column.text('book'),
