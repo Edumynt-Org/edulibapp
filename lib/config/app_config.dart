@@ -3,7 +3,7 @@
 /// In development, defaults point to localhost.
 /// For production, pass values at build time:
 ///   flutter build web --dart-define=DIRECTUS_URL=https://cms.edumynt.org \
-///                     --dart-define=POWERSYNC_URL=https://powersync.edumynt.org
+///                     --dart-define=POWERSYNC_URL=https://sync.edumynt.org
 class AppConfig {
   static const String directusUrl = String.fromEnvironment(
     'DIRECTUS_URL',
