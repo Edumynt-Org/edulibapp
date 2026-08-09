@@ -4,6 +4,7 @@ import 'package:edulibapp/data/powersync/app_schema.dart';
 import 'package:edulibapp/data/powersync/fts_setup.dart';
 import 'package:edulibapp/data/powersync/powersync_library_repository.dart';
 import 'package:edulibapp/data/powersync/powersync_sync_connector.dart';
+import 'package:edulibapp/domain/models/review.dart';
 
 import 'dart:io';
 
@@ -28,7 +29,7 @@ void main() {
         ['22222222-2222-4b01-90e6-222222222222', 'Author', null]
       );
       await mockDb.execute(
-        'INSERT INTO book_authors (id, book_id, author_id) VALUES (?, ?, ?)',
+        'INSERT INTO book_authors (id, book, author) VALUES (?, ?, ?)',
         ['33333333-3333-4b01-90e6-333333333333', '11111111-1111-4b01-90e6-111111111111', '22222222-2222-4b01-90e6-222222222222']
       );
 
@@ -89,11 +90,11 @@ void main() {
       test('must fetch hierarchical book details (AC: #3, #4)', () async {
         // Setup hierarchical data
         await mockDb.execute(
-          'INSERT INTO editions (id, book_id, format, title, cover) VALUES (?, ?, ?, ?, ?)',
+          'INSERT INTO editions (id, book, format, title, cover) VALUES (?, ?, ?, ?, ?)',
           ['ed1', '11111111-1111-4b01-90e6-111111111111', 'EPUB', 'Test Edition', 'edition-cover-uuid']
         );
         await mockDb.execute(
-          'INSERT INTO parts (id, edition_id, title, sort_order) VALUES (?, ?, ?, ?)',
+          'INSERT INTO parts (id, edition, title, sort_order) VALUES (?, ?, ?, ?)',
           ['p1', 'ed1', 'Part 1', 1]
         );
         await mockDb.execute(
@@ -101,7 +102,7 @@ void main() {
           ['c1', 'Chapter 1', 'chapter-1', 'TEXT', 1]
         );
         await mockDb.execute(
-          'INSERT INTO part_chapters (id, part_id, chapter_id, sort_order) VALUES (?, ?, ?, ?)',
+          'INSERT INTO parts_chapters (id, parts_id, chapters_id, sort_order) VALUES (?, ?, ?, ?)',
           ['pc1', 'p1', 'c1', 1]
         );
 
@@ -127,7 +128,7 @@ void main() {
           ['list1', 'Staff Picks', 'staff-picks', 1]
         );
         await mockDb.execute(
-          'INSERT INTO book_list_items (id, book_list_id, book_id, sort_order) VALUES (?, ?, ?, ?)',
+          'INSERT INTO book_list_items (id, list, book, sort_order) VALUES (?, ?, ?, ?)',
           ['item1', 'list1', '11111111-1111-4b01-90e6-111111111111', 1]
         );
 
@@ -138,6 +139,38 @@ void main() {
         expect(firstEmission[0].title, equals('Staff Picks'));
         expect(firstEmission[0].books.length, equals(1));
         expect(firstEmission[0].books[0].title, equals('Test Book'));
+      });
+    });
+
+    group('PowerSyncLibraryRepository - Reviews (Story 5.3)', () {
+      test('stores a half-step review locally and returns it for its book', () async {
+        await repo.createReview(ReviewDraft(
+          profileId: 'reader-1',
+          bookId: '11111111-1111-4b01-90e6-111111111111',
+          rating: 4.5,
+          title: 'Excellent',
+          body: '**A thoughtful read.**',
+          containsSpoilers: true,
+        ));
+
+        final reviews = await repo.getReviewsForBook('11111111-1111-4b01-90e6-111111111111');
+
+        expect(reviews, hasLength(1));
+        expect(reviews.single.rating, 4.5);
+        expect(reviews.single.containsSpoilers, isTrue);
+      });
+
+      test('rejects ratings outside 0–5 or not in half-step increments', () async {
+        expect(
+          () => repo.createReview(const ReviewDraft(
+            profileId: 'reader-1',
+            bookId: 'book-1',
+            rating: 5.1,
+            body: 'Invalid rating',
+            containsSpoilers: false,
+          )),
+          throwsA(isA<ArgumentError>()),
+        );
       });
     });
   });

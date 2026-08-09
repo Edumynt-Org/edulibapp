@@ -4,6 +4,8 @@ class AppUser {
   final bool isAnonymous;
   final String? email;
   final String? displayName;
+  final int? currentStreak;
+  final String? lastStreakDate;
 
   const AppUser({
     required this.id,
@@ -11,5 +13,7 @@ class AppUser {
     required this.isAnonymous,
     this.email,
     this.displayName,
+    this.currentStreak,
+    this.lastStreakDate,
   });
 }

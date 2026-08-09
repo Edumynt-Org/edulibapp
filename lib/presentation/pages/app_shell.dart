@@ -132,7 +132,7 @@ class _BooksGridPageState extends State<BooksGridPage> {
                                       book.coverUrl!,
                                       fit: BoxFit.cover,
                                       width: double.infinity,
-                                      errorBuilder: (_, __, ___) => _placeholder(book),
+                                      errorBuilder: (_, _, _) => _placeholder(book),
                                     )
                                   : _placeholder(book),
                             ),
@@ -181,6 +181,8 @@ class _BooksGridPageState extends State<BooksGridPage> {
 }
 
 /// My Library placeholder page
+
+import '../widgets/custom_shelves_list.dart';
 
 class MyLibraryPage extends StatefulWidget {
   const MyLibraryPage({super.key});
@@ -247,34 +249,43 @@ class _MyLibraryPageState extends State<MyLibraryPage> {
             ),
         ],
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: isLoggedIn
               ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    CircleAvatar(
-                      radius: 48,
-                      child: Text(
-                        _user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
-                        style: const TextStyle(fontSize: 32),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _user?.displayName ?? 'User',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _user?.email ?? '',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    Center(
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 48,
+                            child: Text(
+                              _user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
+                              style: const TextStyle(fontSize: 32),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _user?.displayName ?? 'User',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _user?.email ?? '',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ]
                       ),
                     ),
                     const SizedBox(height: 32),
-                    const Text('Your saved books and progress will appear here.'),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    CustomShelvesList(isAuthenticated: true),
                   ],
                 )
               : Column(

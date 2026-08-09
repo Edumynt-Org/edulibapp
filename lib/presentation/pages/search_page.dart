@@ -63,7 +63,7 @@ class CatalogSearchDelegate extends SearchDelegate<Book?> {
             final book = results[index];
             return ListTile(
               leading: book.coverUrl != null
-                  ? Image.network(book.coverUrl!, width: 50, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.book))
+                  ? Image.network(book.coverUrl!, width: 50, fit: BoxFit.cover, errorBuilder: (_,_,_) => const Icon(Icons.book))
                   : const Icon(Icons.book),
               title: Text(book.title),
               subtitle: Text(book.author),

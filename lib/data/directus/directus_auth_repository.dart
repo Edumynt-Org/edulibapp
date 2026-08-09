@@ -4,15 +4,19 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/models/user.dart';
 
+import '../../domain/repositories/sync_connector.dart';
+
 class DirectusAuthRepository implements IAuthRepository {
   final String baseUrl;
   final http.Client client;
   final FlutterSecureStorage secureStorage;
+  final ISyncConnector? syncConnector;
 
   DirectusAuthRepository({
     required this.baseUrl, 
     required this.client,
     this.secureStorage = const FlutterSecureStorage(),
+    this.syncConnector,
   });
 
   @override
@@ -31,7 +35,7 @@ class DirectusAuthRepository implements IAuthRepository {
     
     final uri = Uri.parse('$baseUrl$path');
     final Map<String, String> mergedHeaders = {
-      if (headers != null) ...headers,
+      ...?headers,
       if (accessToken != null) 'Authorization': 'Bearer $accessToken',
     };
 
@@ -92,6 +96,10 @@ class DirectusAuthRepository implements IAuthRepository {
 
     if (userResponse.statusCode != 200) {
       throw Exception('Failed to fetch user profile');
+    }
+
+    if (syncConnector != null) {
+      await syncConnector!.migrateGuestData(userResult['data']['id']);
     }
 
     return AppUser(
@@ -176,6 +184,10 @@ class DirectusAuthRepository implements IAuthRepository {
           ? result['errors'][0]['message']
           : 'Registration failed';
       throw Exception(errorMessage);
+    }
+
+    if (syncConnector != null) {
+      await syncConnector!.migrateGuestData(result['data']['id']);
     }
 
     return AppUser(

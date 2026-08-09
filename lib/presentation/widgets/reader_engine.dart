@@ -15,10 +15,10 @@ class ReaderEngine extends StatefulWidget {
   final int initialProgress;
 
   const ReaderEngine({
-    Key? key,
+    super.key,
     required this.chapter,
     this.initialProgress = 0,
-  }) : super(key: key);
+  });
 
   @override
   State<ReaderEngine> createState() => _ReaderEngineState();
@@ -350,7 +350,7 @@ class _ReaderEngineState extends State<ReaderEngine> {
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text('$_progress%', style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 12)),
+              child: Text('$_progress%', style: TextStyle(color: textColor.withValues(alpha: 0.7), fontSize: 12)),
             ),
           ),
           IconButton(
@@ -625,7 +625,7 @@ class _DictionarySheetState extends State<_DictionarySheet> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         );
       },

@@ -7,7 +7,7 @@ import '../widgets/reader_engine.dart';
 class ReaderPage extends StatefulWidget {
   final String chapterSlug;
 
-  const ReaderPage({Key? key, required this.chapterSlug}) : super(key: key);
+  const ReaderPage({super.key, required this.chapterSlug});
 
   @override
   State<ReaderPage> createState() => _ReaderPageState();

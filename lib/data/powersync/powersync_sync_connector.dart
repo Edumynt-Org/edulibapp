@@ -84,4 +84,82 @@ class PowerSyncSyncConnector implements ISyncConnector {
       pendingChangesCount: status.uploading ? 1 : 0,
     );
   }
+  @override
+  Future<void> migrateGuestData(String profileId) async {
+    // 1. Migrate chapter_progress
+    final anonChapters = await _db.getAll(
+      "SELECT * FROM chapter_progress WHERE profile IS NULL OR profile = 'anonymous' OR profile = ''"
+    );
+    for (var anon in anonChapters) {
+      final existing = await _db.getOptional(
+        "SELECT * FROM chapter_progress WHERE profile = ? AND chapter = ?",
+        [profileId, anon['chapter']]
+      );
+      if (existing != null) {
+        final anonProgress = (anon['progress_percent'] as num?)?.toInt() ?? 0;
+        final existProgress = (existing['progress_percent'] as num?)?.toInt() ?? 0;
+        final anonTime = anon['last_read_at'] != null ? DateTime.tryParse(anon['last_read_at'])?.millisecondsSinceEpoch ?? 0 : 0;
+        final existTime = existing['last_read_at'] != null ? DateTime.tryParse(existing['last_read_at'])?.millisecondsSinceEpoch ?? 0 : 0;
+
+        if (anonProgress > existProgress || (anonProgress == existProgress && anonTime > existTime)) {
+          await _db.execute(
+            "UPDATE chapter_progress SET progress_percent = ?, last_position = ?, status = ?, completed_at = ?, last_read_at = ? WHERE id = ?",
+            [anon['progress_percent'], anon['last_position'], anon['status'], anon['completed_at'], anon['last_read_at'], existing['id']]
+          );
+        }
+        await _db.execute("DELETE FROM chapter_progress WHERE id = ?", [anon['id']]);
+      } else {
+        await _db.execute("UPDATE chapter_progress SET profile = ? WHERE id = ?", [profileId, anon['id']]);
+      }
+    }
+
+    // 2. Migrate audio_progress
+    final anonAudio = await _db.getAll(
+      "SELECT * FROM audio_progress WHERE profile IS NULL OR profile = 'anonymous' OR profile = ''"
+    );
+    for (var anon in anonAudio) {
+      final existing = await _db.getOptional(
+        "SELECT * FROM audio_progress WHERE profile = ? AND audio_chapter = ?",
+        [profileId, anon['audio_chapter']]
+      );
+      if (existing != null) {
+        final anonPos = (anon['position_seconds'] as num?)?.toInt() ?? 0;
+        final existPos = (existing['position_seconds'] as num?)?.toInt() ?? 0;
+        final anonTime = anon['last_listened_at'] != null ? DateTime.tryParse(anon['last_listened_at'])?.millisecondsSinceEpoch ?? 0 : 0;
+        final existTime = existing['last_listened_at'] != null ? DateTime.tryParse(existing['last_listened_at'])?.millisecondsSinceEpoch ?? 0 : 0;
+
+        if (anonPos > existPos || (anonPos == existPos && anonTime > existTime)) {
+          await _db.execute(
+            "UPDATE audio_progress SET position_seconds = ?, duration_seconds = ?, status = ?, completed_at = ?, last_listened_at = ? WHERE id = ?",
+            [anon['position_seconds'], anon['duration_seconds'], anon['status'], anon['completed_at'], anon['last_listened_at'], existing['id']]
+          );
+        }
+        await _db.execute("DELETE FROM audio_progress WHERE id = ?", [anon['id']]);
+      } else {
+        await _db.execute("UPDATE audio_progress SET profile = ? WHERE id = ?", [profileId, anon['id']]);
+      }
+    }
+
+    // 3. Migrate reading_preferences
+    final anonPrefs = await _db.getAll(
+      "SELECT * FROM reading_preferences WHERE profile IS NULL OR profile = 'anonymous' OR profile = ''"
+    );
+    for (var anon in anonPrefs) {
+      final existing = await _db.getOptional(
+        "SELECT * FROM reading_preferences WHERE profile = ?",
+        [profileId]
+      );
+      if (existing != null) {
+        await _db.execute("DELETE FROM reading_preferences WHERE id = ?", [anon['id']]);
+      } else {
+        await _db.execute("UPDATE reading_preferences SET profile = ? WHERE id = ?", [profileId, anon['id']]);
+      }
+    }
+
+    // 4. Migrate annotations
+    await _db.execute(
+      "UPDATE annotations SET profile = ? WHERE profile IS NULL OR profile = 'anonymous' OR profile = ''",
+      [profileId]
+    );
+  }
 }

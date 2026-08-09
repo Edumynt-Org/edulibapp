@@ -16,7 +16,7 @@ class CatalogPage extends StatelessWidget {
     final libraryRepository = context.watch<ILibraryRepository>();
     
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('Edumynt Library', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
@@ -112,7 +112,7 @@ class CatalogPage extends StatelessWidget {
                         book.coverUrl!,
                         fit: BoxFit.cover,
                         width: double.infinity,
-                        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                        errorBuilder: (_, _, _) => _buildPlaceholder(),
                       )
                     : _buildPlaceholder(),
               ),

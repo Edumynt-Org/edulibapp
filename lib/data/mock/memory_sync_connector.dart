@@ -25,4 +25,10 @@ class MemorySyncConnector implements ISyncConnector {
       pendingChangesCount: 0,
     );
   }
+
+  @override
+  Future<void> migrateGuestData(String profileId) async {
+    // Mock implementation for guest data migration
+    return Future.value();
+  }
 }

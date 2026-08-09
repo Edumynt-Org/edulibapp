@@ -24,10 +24,10 @@ Future<void> configureFts(PowerSyncDatabase db) async {
       b.title, 
       b.description,
       (
-        COALESCE((SELECT group_concat(a.name, ' ') FROM authors a JOIN book_authors ba ON a.id = ba.author_id WHERE ba.book_id = b.id), '') || ' ' ||
-        COALESCE((SELECT group_concat(g.name, ' ') FROM genres g JOIN book_genres bg ON g.id = bg.genre_id WHERE bg.book_id = b.id), '') || ' ' ||
-        COALESCE((SELECT group_concat(c.name, ' ') FROM categories c JOIN book_categories bc ON c.id = bc.category_id WHERE bc.book_id = b.id), '') || ' ' ||
-        COALESCE((SELECT group_concat(s.name, ' ') FROM series s JOIN series_books sb ON s.id = sb.series_id WHERE sb.book_id = b.id), '')
+        COALESCE((SELECT group_concat(a.name, ' ') FROM authors a JOIN book_authors ba ON a.id = ba.author WHERE ba.book = b.id), '') || ' ' ||
+        COALESCE((SELECT group_concat(g.name, ' ') FROM genres g JOIN book_genres bg ON g.id = bg.genre WHERE bg.book = b.id), '') || ' ' ||
+        COALESCE((SELECT group_concat(c.name, ' ') FROM categories c JOIN book_categories bc ON c.id = bc.category WHERE bc.book = b.id), '') || ' ' ||
+        COALESCE((SELECT group_concat(s.name, ' ') FROM series s JOIN series_books sb ON s.id = sb.series WHERE sb.book = b.id), '')
       ) as search_terms
     FROM books b
     WHERE b.id NOT IN (SELECT id FROM fts_books);
@@ -37,10 +37,10 @@ Future<void> configureFts(PowerSyncDatabase db) async {
   final updateSearchTermsSql = '''
       UPDATE fts_books
       SET search_terms = (
-        COALESCE((SELECT group_concat(a.name, ' ') FROM authors a JOIN book_authors ba ON a.id = ba.author_id WHERE ba.book_id = fts_books.id), '') || ' ' ||
-        COALESCE((SELECT group_concat(g.name, ' ') FROM genres g JOIN book_genres bg ON g.id = bg.genre_id WHERE bg.book_id = fts_books.id), '') || ' ' ||
-        COALESCE((SELECT group_concat(c.name, ' ') FROM categories c JOIN book_categories bc ON c.id = bc.category_id WHERE bc.book_id = fts_books.id), '') || ' ' ||
-        COALESCE((SELECT group_concat(s.name, ' ') FROM series s JOIN series_books sb ON s.id = sb.series_id WHERE sb.book_id = fts_books.id), '')
+        COALESCE((SELECT group_concat(a.name, ' ') FROM authors a JOIN book_authors ba ON a.id = ba.author WHERE ba.book = fts_books.id), '') || ' ' ||
+        COALESCE((SELECT group_concat(g.name, ' ') FROM genres g JOIN book_genres bg ON g.id = bg.genre WHERE bg.book = fts_books.id), '') || ' ' ||
+        COALESCE((SELECT group_concat(c.name, ' ') FROM categories c JOIN book_categories bc ON c.id = bc.category WHERE bc.book = fts_books.id), '') || ' ' ||
+        COALESCE((SELECT group_concat(s.name, ' ') FROM series s JOIN series_books sb ON s.id = sb.series WHERE sb.book = fts_books.id), '')
       )
   ''';
 

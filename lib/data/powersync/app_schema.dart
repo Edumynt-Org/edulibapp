@@ -201,4 +201,53 @@ const appSchema = Schema([
   ], indexes: [
     Index('profile_chapter', [IndexedColumn('profile'), IndexedColumn('audio_chapter')]),
   ]),
+  Table('follows', [
+    Column.text('follower'),
+    Column.text('following'),
+    Column.text('date_created'),
+  ], indexes: [
+    Index('follower', [IndexedColumn('follower')]),
+    Index('following', [IndexedColumn('following')]),
+  ]),
+  Table('reviews', [
+    Column.text('profile'),
+    Column.text('book'),
+    Column.real('rating'),
+    Column.text('title'),
+    Column.text('body'),
+    Column.integer('contains_spoilers'),
+    Column.text('status'),
+    Column.text('date_created'),
+    Column.text('date_updated'),
+  ], indexes: [
+    Index('book', [IndexedColumn('book')]),
+    Index('profile', [IndexedColumn('profile')]),
+  ]),
+  Table('profiles', [
+    Column.text('user'),
+    Column.text('status'),
+    Column.text('username'),
+    Column.text('display_name'),
+    Column.text('avatar'),
+    Column.text('bio'),
+    Column.text('website_url'),
+    Column.text('location'),
+    Column.integer('is_verified'),
+    Column.integer('current_streak'),
+    Column.text('last_streak_date'),
+  ]),
+  Table('achievements', [
+    Column.text('name'),
+    Column.text('description'),
+    Column.text('criteria_type'),
+    Column.integer('threshold'),
+    Column.text('badge_icon'),
+  ]),
+  Table('user_achievements', [
+    Column.text('profile'),
+    Column.text('achievement_id'),
+    Column.text('awarded_at'),
+  ], indexes: [
+    Index('profile', [IndexedColumn('profile')]),
+  ]),
 ]);

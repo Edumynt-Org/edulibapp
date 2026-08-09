@@ -8,6 +8,10 @@ import '../../domain/models/reading_preferences.dart';
 import '../../domain/models/annotation.dart';
 import '../../domain/models/dictionary_entry.dart';
 import '../../domain/models/audio_progress.dart';
+import '../../domain/models/user_shelf_item.dart';
+import '../../domain/models/review.dart';
+import '../../domain/models/milestone_stats.dart';
+import '../../domain/models/achievement_badge.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -36,6 +40,7 @@ class MemoryLibraryRepository implements ILibraryRepository {
   final List<Annotation> _annotations = [];
   final Map<String, DictionaryEntry> _dictionaryCache = {};
   final List<AudioProgress> _audioProgress = [];
+  final List<Review> _reviews = [];
 
   @override
   Future<List<Book>> getCatalogBooks() async {
@@ -103,7 +108,7 @@ class MemoryLibraryRepository implements ILibraryRepository {
 
   @override
   Future<void> updateChapterProgress(String chapterId, int progressPercent, int scrollPosition) async {
-    print('Mock: Updated progress for chapter $chapterId to $progressPercent% (scroll: $scrollPosition\px)');
+    print('Mock: Updated progress for chapter $chapterId to $progressPercent% (scroll: ${scrollPosition}px)');
   }
 
   @override
@@ -193,5 +198,84 @@ class MemoryLibraryRepository implements ILibraryRepository {
     } else {
       _audioProgress.add(progress);
     }
+  }
+
+  @override
+  Future<void> updateBookStatus(String bookId, String status) async {
+    print('Mock updateBookStatus $bookId $status');
+  }
+
+  @override
+  Future<UserShelf> createCustomShelf(String name, bool isPrivate, {String? description}) async {
+    final now = DateTime.now();
+    return UserShelf(
+      id: 'mock-id-${now.millisecondsSinceEpoch}',
+      profileId: 'guest',
+      name: name,
+      slug: name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
+      description: description,
+      isPrivate: isPrivate,
+      sortOrder: 0,
+      dateCreated: now,
+      dateUpdated: now,
+    );
+  }
+
+  @override
+  Future<void> addBookToShelf(String shelfId, String bookId) async {}
+
+  @override
+  Future<void> removeBookFromShelf(String shelfId, String bookId) async {}
+
+  @override
+  Future<void> reorderShelf(String shelfId, List<String> bookIds) async {}
+
+  @override
+  Future<List<UserShelf>> getPublicShelves(String profileId) async => [];
+
+  @override
+  Future<List<UserShelf>> getUserShelves() async => [];
+
+  @override
+  Future<List<UserShelfItem>> getShelfItems(String shelfId) async => [];
+
+  @override
+  Future<Review> createReview(ReviewDraft review) async {
+    if (review.rating < 0 || review.rating > 5 || (review.rating * 2) % 1 != 0) {
+      throw ArgumentError('Ratings must be between 0 and 5 in 0.5 increments.');
+    }
+    final now = DateTime.now().toUtc();
+    final created = Review(
+      id: 'review-${now.microsecondsSinceEpoch}',
+      profileId: review.profileId,
+      bookId: review.bookId,
+      rating: review.rating,
+      title: review.title,
+      body: review.body,
+      containsSpoilers: review.containsSpoilers,
+      status: 'published',
+      dateCreated: now,
+      dateUpdated: now,
+    );
+    _reviews.insert(0, created);
+    return created;
+  }
+
+  @override
+  Future<List<Review>> getReviewsForBook(String bookId) async =>
+      _reviews.where((review) => review.bookId == bookId && review.status == 'published').toList();
+
+  @override
+  Future<List<Review>> getReviewsByUser(String profileId) async =>
+      _reviews.where((review) => review.profileId == profileId).toList();
+
+  @override
+  Future<MilestoneStats> getMilestoneStats(String profileId) async {
+    return MilestoneStats.empty();
+  }
+
+  @override
+  Future<List<AchievementBadge>> getAchievementBadges(String profileId) async {
+    return [];
   }
 }

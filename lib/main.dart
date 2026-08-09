@@ -39,6 +39,7 @@ void main() async {
   final authRepository = DirectusAuthRepository(
     baseUrl: AppConfig.directusUrl,
     client: http.Client(),
+    syncConnector: syncConnector,
   );
 
   runApp(MyApp(
@@ -87,7 +88,7 @@ class MyApp extends StatelessWidget {
         builder: (context, child) {
           return Stack(
             children: [
-              if (child != null) child,
+              ?child,
               const GlobalAudioPlayer(),
             ],
           );

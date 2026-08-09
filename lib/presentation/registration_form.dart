@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class RegistrationForm extends StatefulWidget {
   final Function(Map<String, String>)? onSubmit;
 
-  const RegistrationForm({Key? key, this.onSubmit}) : super(key: key);
+  const RegistrationForm({super.key, this.onSubmit});
 
   @override
   State<RegistrationForm> createState() => _RegistrationFormState();

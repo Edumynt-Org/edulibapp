@@ -6,6 +6,9 @@ import 'reader_page.dart';
 import '../../domain/models/audio_edition.dart' as ae;
 import '../../domain/models/audio_chapter.dart' as ac;
 import '../../application/services/audio_player_service.dart';
+import '../widgets/library_status_selector.dart';
+import '../widgets/shelf_selector.dart';
+import '../widgets/reviews_section.dart';
 
 class BookDetailsPage extends StatefulWidget {
   final String slug;
@@ -44,9 +47,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
         }
         if (book.audioEditions.isNotEmpty) {
           _selectedAudioEdition = book.audioEditions.first;
-          if (_selectedTocEdition == null) {
-            _selectedTocEdition = _selectedAudioEdition;
-          }
+          _selectedTocEdition ??= _selectedAudioEdition;
         }
       }
       return book;
@@ -118,6 +119,10 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                           ),
                         ),
                         const SizedBox(height: 24),
+                        LibraryStatusSelector(bookId: book.id),
+                        const SizedBox(height: 8),
+                        ShelfSelector(bookId: book.id),
+                        const SizedBox(height: 16),
                         _buildActionButtons(context, book),
                       ],
                     ),
@@ -161,7 +166,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
               height: 240,
               width: 160,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _buildPlaceholder(),
+              errorBuilder: (_, _, _) => _buildPlaceholder(),
             )
           : _buildPlaceholder(),
     );
@@ -298,13 +303,11 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
 
   void _onListenPressed() {
     if (_selectedAudioEdition != null) {
-      if (_bookFuture != null) {
-        _bookFuture.then((book) {
-          if (book != null) {
-            _playAudioChapter(_selectedAudioEdition!, book, 0);
-          }
-        });
-      }
+      _bookFuture.then((book) {
+        if (book != null) {
+          _playAudioChapter(_selectedAudioEdition!, book, 0);
+        }
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No audio edition available.')),
@@ -391,7 +394,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
                     Navigator.pop(ctx);
                   },
                 );
-              }).toList(),
+              }),
             ],
           ),
         );
@@ -622,90 +625,8 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
     );
   }
 
-  Widget _buildReviewsTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '4.5',
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Row(
-                  children: [
-                    Icon(Icons.star, color: Colors.amber, size: 20),
-                    Icon(Icons.star, color: Colors.amber, size: 20),
-                    Icon(Icons.star, color: Colors.amber, size: 20),
-                    Icon(Icons.star, color: Colors.amber, size: 20),
-                    Icon(Icons.star_half, color: Colors.amber, size: 20),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text('Based on 124 reviews', style: TextStyle(color: Colors.grey)),
-              ],
-            ),
-            FilledButton.tonalIcon(
-              onPressed: () {
-                // TODO: Handle Write a Review
-              },
-              icon: const Icon(Icons.edit),
-              label: const Text('Write a Review'),
-            ),
-          ],
-        ),
-        const Divider(height: 48),
-        // Placeholder reviews
-        _buildReviewItem('Alice Smith', 'Amazing book! Could not put it down.', 5),
-        const Divider(),
-        _buildReviewItem('Bob Johnson', 'Very informative, but a bit dry in the middle.', 4),
-        const Divider(),
-        _buildReviewItem('Carol White', 'I really enjoyed the audio narration.', 5),
-      ],
-    );
-  }
-
-  Widget _buildReviewItem(String name, String comment, int rating) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                child: Text(name[0]),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Row(
-                    children: List.generate(
-                      5,
-                      (index) => Icon(
-                        index < rating ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(comment),
-        ],
-      ),
-    );
+  Widget _buildReviewsTab(BookDetails book) {
+    return ReviewsSection(bookId: book.id);
   }
 }
 

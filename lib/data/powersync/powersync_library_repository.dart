@@ -10,6 +10,11 @@ import '../../domain/models/reading_preferences.dart';
 import '../../domain/models/annotation.dart';
 import '../../domain/models/dictionary_entry.dart';
 import '../../domain/models/audio_progress.dart';
+import '../../domain/models/review.dart';
+import '../../domain/models/user_shelf.dart';
+import '../../domain/models/user_shelf_item.dart';
+import '../../domain/models/milestone_stats.dart';
+import '../../domain/models/achievement_badge.dart';
 import '../../config/app_config.dart';
 import 'package:http/http.dart' as http;
 
@@ -502,12 +507,22 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
       final completedAt = progressPercent >= 100 ? now : null;
       
       if (existing != null) {
+        final oldProgress = await getChapterProgress(chapterId);
+        if (oldProgress != null) {
+          final advancement = progressPercent - oldProgress.progressPercent;
+          if (advancement >= 1) {
+            await calculateAndSyncDailyStreak();
+          }
+        }
         await _db.execute('''
           UPDATE chapter_progress 
           SET progress_percent = ?, last_position = ?, last_read_at = ?, status = ?, completed_at = ?
           WHERE id = ?
         ''', [progressPercent, scrollPosition, now, status, completedAt, existing['id']]);
       } else {
+        if (progressPercent >= 1) {
+          await calculateAndSyncDailyStreak();
+        }
         final newId = const Uuid().v4();
         await _db.execute('''
           INSERT INTO chapter_progress (id, profile, chapter, progress_percent, last_position, last_read_at, status, completed_at)
@@ -698,6 +713,15 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
     try {
       final existing = await getAudioProgress(progress.bookId, progress.audioChapterId);
       if (existing != null) {
+        final oldSeconds = existing.positionSeconds;
+        if (progress.positionSeconds - oldSeconds >= 300) {
+          await calculateAndSyncDailyStreak();
+        }
+      } else if (progress.positionSeconds >= 300) {
+        await calculateAndSyncDailyStreak();
+      }
+
+      if (existing != null) {
         await _db.execute(
           'UPDATE audio_progress SET position_seconds = ?, duration_seconds = ?, status = ?, completed_at = ?, last_listened_at = ? WHERE profile IS ? AND book = ? AND audio_chapter = ?',
           [
@@ -729,5 +753,272 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
     } catch (e) {
       print('Failed to save audio progress: $e');
     }
+  }
+
+  @override
+  Future<void> updateBookStatus(String bookId, String status) async {
+    const profileId = 'guest'; 
+    try {
+      final existing = await _db.getOptional('''
+        SELECT id FROM user_books WHERE book = ? AND profile = ?
+      ''', [bookId, profileId]);
+      
+      final now = DateTime.now().toIso8601String();
+      final dateFinished = status == 'completed' ? now : null;
+      
+      if (existing != null) {
+        await _db.execute('''
+          UPDATE user_books 
+          SET reading_status = ?, last_activity_at = ?, date_finished = ?
+          WHERE id = ?
+        ''', [status, now, dateFinished, existing['id']]);
+      } else {
+        final newId = const Uuid().v4();
+        await _db.execute('''
+          INSERT INTO user_books (id, profile, book, reading_status, date_started, date_finished, last_activity_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', [newId, profileId, bookId, status, now, dateFinished, now]);
+      }
+    } catch (e) {
+      print('Failed to update book status: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Review> createReview(ReviewDraft review) async {
+    if (review.rating < 0 || review.rating > 5 || (review.rating * 2) % 1 != 0) {
+      throw ArgumentError('Ratings must be between 0 and 5 in 0.5 increments.');
+    }
+
+    final id = const Uuid().v4();
+    final now = DateTime.now().toUtc().toIso8601String();
+    await _db.execute('''
+      INSERT INTO reviews (id, profile, book, rating, title, body, contains_spoilers, status, date_created, date_updated)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', [
+      id,
+      review.profileId,
+      review.bookId,
+      review.rating,
+      review.title,
+      review.body,
+      review.containsSpoilers ? 1 : 0,
+      'published',
+      now,
+      now,
+    ]);
+
+    return Review(
+      id: id,
+      profileId: review.profileId,
+      bookId: review.bookId,
+      rating: review.rating,
+      title: review.title,
+      body: review.body,
+      containsSpoilers: review.containsSpoilers,
+      status: 'published',
+      dateCreated: DateTime.parse(now),
+      dateUpdated: DateTime.parse(now),
+    );
+  }
+
+  @override
+  Future<List<Review>> getReviewsForBook(String bookId) async {
+    final rows = await _db.getAll(
+      'SELECT * FROM reviews WHERE book = ? AND status = ? ORDER BY date_created DESC',
+      [bookId, 'published'],
+    );
+    return rows.map(Review.fromMap).toList();
+  }
+
+  @override
+  Future<List<Review>> getReviewsByUser(String profileId) async {
+    final rows = await _db.getAll(
+      'SELECT * FROM reviews WHERE profile = ? ORDER BY date_created DESC',
+      [profileId],
+    );
+    return rows.map(Review.fromMap).toList();
+  }
+
+  @override
+  Future<UserShelf> createCustomShelf(String name, bool isPrivate, {String? description}) async {
+    const profileId = 'guest';
+    final id = const Uuid().v4();
+    final slug = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    await _db.execute('''
+      INSERT INTO user_shelves (id, profile, name, slug, description, is_private, sort_order, date_created, date_updated)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', [id, profileId, name, slug, description, isPrivate ? 1 : 0, 0, now, now]);
+
+    return UserShelf(
+      id: id,
+      profileId: profileId,
+      name: name,
+      slug: slug,
+      description: description,
+      isPrivate: isPrivate,
+      sortOrder: 0,
+      dateCreated: DateTime.parse(now),
+      dateUpdated: DateTime.parse(now),
+    );
+  }
+
+  @override
+  Future<void> addBookToShelf(String shelfId, String bookId) async {
+    final id = const Uuid().v4();
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    final result = await _db.getOptional('SELECT MAX(sort_order) as max_sort FROM user_shelf_items WHERE shelf = ?', [shelfId]);
+    final maxSort = result?['max_sort'] as int? ?? 0;
+    final nextSort = maxSort + 1;
+
+    await _db.execute('''
+      INSERT INTO user_shelf_items (id, shelf, book, sort_order, date_added)
+      VALUES (?, ?, ?, ?, ?)
+    ''', [id, shelfId, bookId, nextSort, now]);
+  }
+
+  @override
+  Future<void> removeBookFromShelf(String shelfId, String bookId) async {
+    await _db.execute('DELETE FROM user_shelf_items WHERE shelf = ? AND book = ?', [shelfId, bookId]);
+  }
+
+  @override
+  Future<void> reorderShelf(String shelfId, List<String> bookIds) async {
+    await _db.writeTransaction((tx) async {
+      for (int i = 0; i < bookIds.length; i++) {
+        await tx.execute('UPDATE user_shelf_items SET sort_order = ? WHERE shelf = ? AND book = ?', [i, shelfId, bookIds[i]]);
+      }
+    });
+  }
+
+  @override
+  Future<List<UserShelf>> getPublicShelves(String profileId) async {
+    final rows = await _db.getAll('SELECT * FROM user_shelves WHERE profile = ? AND is_private = 0 ORDER BY sort_order', [profileId]);
+    return rows.map((r) => UserShelf.fromMap(r)).toList();
+  }
+
+  @override
+  Future<List<UserShelf>> getUserShelves() async {
+    const profileId = 'guest';
+    final rows = await _db.getAll('SELECT * FROM user_shelves WHERE profile = ? ORDER BY sort_order', [profileId]);
+    return rows.map((r) => UserShelf.fromMap(r)).toList();
+  }
+
+  @override
+  Future<List<UserShelfItem>> getShelfItems(String shelfId) async {
+    final rows = await _db.getAll('''
+      SELECT si.*, b.title as book_title, b.slug as book_slug, b.cover as book_cover
+      FROM user_shelf_items si
+      JOIN books b ON si.book = b.id
+      WHERE si.shelf = ?
+      ORDER BY si.sort_order
+    ''', [shelfId]);
+    
+    final directusUrl = AppConfig.directusUrl;
+    String? getCoverUrl(String? coverId) {
+      if (coverId == null) return null;
+      return '\$directusUrl/assets/\$coverId';
+    }
+
+    return rows.map((r) {
+      final book = Book(
+        id: r['book'] as String? ?? '',
+        title: r['book_title'] as String? ?? '',
+        slug: r['book_slug'] as String? ?? '',
+        coverUrl: getCoverUrl(r['book_cover'] as String?),
+        author: '',
+        description: '',
+      );
+      return UserShelfItem.fromMap(r, book: book);
+    }).toList();
+  }
+
+  @override
+  Future<int> getDailyStreakCount(String profileId) async {
+    try {
+      final row = await _db.getOptional('SELECT current_streak FROM profiles WHERE id = ?', [profileId]);
+      return row != null ? (row['current_streak'] as int? ?? 0) : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  @override
+  Future<void> calculateAndSyncDailyStreak() async {
+    const profileId = 'guest'; // We would ideally get the current authenticated user's ID
+    try {
+      final row = await _db.getOptional('SELECT current_streak, last_streak_date FROM profiles WHERE id = ?', [profileId]);
+      if (row == null) return;
+      
+      final currentStreak = row['current_streak'] as int? ?? 0;
+      final lastStreakDateStr = row['last_streak_date'] as String?;
+      
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      if (lastStreakDateStr == null) {
+        await _db.execute('UPDATE profiles SET current_streak = 1, last_streak_date = ? WHERE id = ?', [today.toIso8601String(), profileId]);
+        return;
+      }
+      
+      final lastDate = DateTime.parse(lastStreakDateStr);
+      final lastDateMidnight = DateTime(lastDate.year, lastDate.month, lastDate.day);
+      
+      final diffTime = (today.millisecondsSinceEpoch - lastDateMidnight.millisecondsSinceEpoch).abs();
+      final diffDays = (diffTime / (1000 * 60 * 60 * 24)).ceil();
+      
+      if (diffDays == 0) {
+        return;
+      } else if (diffDays <= 3) {
+        await _db.execute('UPDATE profiles SET current_streak = current_streak + 1, last_streak_date = ? WHERE id = ?', [today.toIso8601String(), profileId]);
+      } else {
+        await _db.execute('UPDATE profiles SET current_streak = 1, last_streak_date = ? WHERE id = ?', [today.toIso8601String(), profileId]);
+      }
+    } catch (e) {
+      print('Failed to update daily streak: $e');
+    }
+  }
+
+  @override
+  Future<MilestoneStats> getMilestoneStats(String profileId) async {
+    final completedBooksResult = await _db.getOptional('SELECT count(*) as count FROM chapter_progress WHERE profile = ? AND status = ?', [profileId, 'Completed']);
+    int totalBooksFinished = (completedBooksResult?['count'] as int?) ?? 0;
+
+    final pagesResult = await _db.getOptional('SELECT sum(progress_percent) as total FROM chapter_progress WHERE profile = ?', [profileId]);
+    int totalPagesRead = (pagesResult?['total'] as int?) ?? 0; // rough approximation
+
+    final hoursResult = await _db.getOptional('SELECT sum(position_seconds) as total FROM audio_progress WHERE profile = ?', [profileId]);
+    int totalHoursListened = ((hoursResult?['total'] as int?) ?? 0) ~/ 3600;
+
+    return MilestoneStats(
+      totalBooksFinished: totalBooksFinished,
+      totalPagesRead: totalPagesRead,
+      totalHoursListened: totalHoursListened,
+      monthlyPages: [],
+      monthlyHours: [],
+    );
+  }
+
+  @override
+  Future<List<AchievementBadge>> getAchievementBadges(String profileId) async {
+    final results = await _db.getAll('''
+      SELECT a.*, ua.awarded_at 
+      FROM achievements a
+      LEFT JOIN user_achievements ua ON a.name = ua.achievement_id AND ua.profile = ?
+    ''', [profileId]);
+    
+    return results.map((r) => AchievementBadge(
+      id: r['name'] as String,
+      name: r['name'] as String,
+      description: r['description'] as String,
+      criteriaType: r['criteria_type'] as String,
+      threshold: r['threshold'] as int,
+      badgeIcon: r['badge_icon'] as String,
+      awardedAt: r['awarded_at'] != null ? DateTime.parse(r['awarded_at'] as String) : null,
+    )).toList();
   }
 }
