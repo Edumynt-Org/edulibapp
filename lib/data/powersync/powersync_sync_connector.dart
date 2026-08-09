@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:powersync/powersync.dart' as ps;
 import 'package:http/http.dart' as http;
@@ -27,7 +28,7 @@ class AnonymousConnector extends ps.PowerSyncBackendConnector {
         );
       }
     } catch (e) {
-      print('Failed to fetch PowerSync token from API: $e');
+      debugPrint('Failed to fetch PowerSync token from API: $e');
     }
 
     // Fallback: return endpoint with empty token (will fail gracefully)

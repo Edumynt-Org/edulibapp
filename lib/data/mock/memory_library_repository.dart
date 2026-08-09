@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../domain/repositories/library_repository.dart';
 import '../../domain/models/book.dart';
 import '../../domain/models/book_details.dart';
@@ -8,6 +9,7 @@ import '../../domain/models/reading_preferences.dart';
 import '../../domain/models/annotation.dart';
 import '../../domain/models/dictionary_entry.dart';
 import '../../domain/models/audio_progress.dart';
+import '../../domain/models/user_shelf.dart';
 import '../../domain/models/user_shelf_item.dart';
 import '../../domain/models/review.dart';
 import '../../domain/models/milestone_stats.dart';
@@ -108,7 +110,7 @@ class MemoryLibraryRepository implements ILibraryRepository {
 
   @override
   Future<void> updateChapterProgress(String chapterId, int progressPercent, int scrollPosition) async {
-    print('Mock: Updated progress for chapter $chapterId to $progressPercent% (scroll: ${scrollPosition}px)');
+    debugPrint('Mock: Updated progress for chapter $chapterId to $progressPercent% (scroll: ${scrollPosition}px)');
   }
 
   @override
@@ -119,7 +121,7 @@ class MemoryLibraryRepository implements ILibraryRepository {
   @override
   Future<void> updateReadingPreferences(ReadingPreferences prefs) async {
     _readingPrefs = prefs;
-    print('Mock: Updated reading preferences');
+    debugPrint('Mock: Updated reading preferences');
   }
 
   @override
@@ -172,7 +174,7 @@ class MemoryLibraryRepository implements ILibraryRepository {
       }
       return null;
     } catch (e) {
-      print('Failed to get definition: $e');
+      debugPrint('Failed to get definition: $e');
       return null;
     }
   }
@@ -202,7 +204,7 @@ class MemoryLibraryRepository implements ILibraryRepository {
 
   @override
   Future<void> updateBookStatus(String bookId, String status) async {
-    print('Mock updateBookStatus $bookId $status');
+    debugPrint('Mock updateBookStatus $bookId $status');
   }
 
   @override
@@ -278,4 +280,10 @@ class MemoryLibraryRepository implements ILibraryRepository {
   Future<List<AchievementBadge>> getAchievementBadges(String profileId) async {
     return [];
   }
+
+  @override
+  Future<void> calculateAndSyncDailyStreak() async {}
+
+  @override
+  Future<int> getDailyStreakCount(String profileId) async => 0;
 }

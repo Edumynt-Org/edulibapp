@@ -148,7 +148,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> with SingleTickerProv
               children: [
                 _buildContentTab(book),
                 _buildDetailsTab(book),
-                _buildReviewsTab(),
+                _buildReviewsTab(book),
               ],
             ),
           );

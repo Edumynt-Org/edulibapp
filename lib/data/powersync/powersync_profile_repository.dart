@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:powersync/powersync.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -25,7 +26,7 @@ class PowerSyncProfileRepository implements IProfileRepository {
         VALUES (?, ?, ?, ?)
       ''', [newId, _currentUserId, targetProfileId, now]);
     } catch (e) {
-      print('Failed to follow user: $e');
+      debugPrint('Failed to follow user: $e');
       throw Exception('Failed to follow user: $e');
     }
   }
@@ -40,7 +41,7 @@ class PowerSyncProfileRepository implements IProfileRepository {
         WHERE follower = ? AND following = ?
       ''', [_currentUserId, targetProfileId]);
     } catch (e) {
-      print('Failed to unfollow user: $e');
+      debugPrint('Failed to unfollow user: $e');
       throw Exception('Failed to unfollow user: $e');
     }
   }
@@ -57,7 +58,7 @@ class PowerSyncProfileRepository implements IProfileRepository {
 
       return result != null;
     } catch (e) {
-      print('Failed to check follow status: $e');
+      debugPrint('Failed to check follow status: $e');
       return false;
     }
   }

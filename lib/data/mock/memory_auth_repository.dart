@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/models/user.dart';
 
@@ -18,7 +19,7 @@ class MemoryAuthRepository implements IAuthRepository {
   }
   @override
   Future<AppUser> register(String email, String password, String displayName, String username) async {
-    print('Mock: Registering user $username ($email)');
+    debugPrint('Mock: Registering user $username ($email)');
     return _currentUser;
   }
 

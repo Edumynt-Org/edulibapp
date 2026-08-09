@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/repositories/library_repository.dart';
 import '../../domain/models/user_shelf.dart';
+import '../../domain/models/user_shelf_item.dart';
 import 'book_details_page.dart';
 
 class ShelfPage extends StatefulWidget {

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:powersync/powersync.dart';
 import 'package:uuid/uuid.dart';
@@ -449,7 +450,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         scrollPosition: result['last_position'] as int? ?? 0
       );
     } catch (e) {
-      print('Failed to get chapter progress: $e');
+      debugPrint('Failed to get chapter progress: $e');
       return null;
     }
   }
@@ -487,7 +488,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         durationSeconds: durationSeconds
       );
     } catch (e) {
-      print('Failed to get linked audio progress: $e');
+      debugPrint('Failed to get linked audio progress: $e');
       return null;
     }
   }
@@ -530,7 +531,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         ''', [newId, profileId, chapterId, progressPercent, scrollPosition, now, status, completedAt]);
       }
     } catch (e) {
-      print('Failed to update chapter progress: $e');
+      debugPrint('Failed to update chapter progress: $e');
     }
   }
 
@@ -550,7 +551,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         );
       }
     } catch (e) {
-      print('Failed to get reading preferences: $e');
+      debugPrint('Failed to get reading preferences: $e');
     }
     return const ReadingPreferences();
   }
@@ -576,7 +577,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         ''', [newId, profileId, prefs.fontFamily, prefs.fontSizePx, prefs.lineSpacing, prefs.theme, prefs.margins]);
       }
     } catch (e) {
-      print('Failed to update reading preferences: $e');
+      debugPrint('Failed to update reading preferences: $e');
     }
   }
 
@@ -597,7 +598,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         createdAt: DateTime.tryParse(r['created_at'] as String? ?? '') ?? DateTime.now(),
       )).toList();
     } catch (e) {
-      print('Failed to get annotations: $e');
+      debugPrint('Failed to get annotations: $e');
       return [];
     }
   }
@@ -676,7 +677,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
       }
       return null;
     } catch (e) {
-      print('Failed to get definition: $e');
+      debugPrint('Failed to get definition: $e');
       return null;
     }
   }
@@ -701,7 +702,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         lastListenedAt: DateTime.parse(row['last_listened_at'] as String),
       );
     } catch (e) {
-      print('Failed to get audio progress: $e');
+      debugPrint('Failed to get audio progress: $e');
       return null;
     }
   }
@@ -751,7 +752,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         );
       }
     } catch (e) {
-      print('Failed to save audio progress: $e');
+      debugPrint('Failed to save audio progress: $e');
     }
   }
 
@@ -780,7 +781,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         ''', [newId, profileId, bookId, status, now, dateFinished, now]);
       }
     } catch (e) {
-      print('Failed to update book status: $e');
+      debugPrint('Failed to update book status: $e');
       rethrow;
     }
   }
@@ -979,7 +980,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
         await _db.execute('UPDATE profiles SET current_streak = 1, last_streak_date = ? WHERE id = ?', [today.toIso8601String(), profileId]);
       }
     } catch (e) {
-      print('Failed to update daily streak: $e');
+      debugPrint('Failed to update daily streak: $e');
     }
   }
 

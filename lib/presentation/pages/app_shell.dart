@@ -1,3 +1,4 @@
+import '../widgets/custom_shelves_list.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/repositories/library_repository.dart';
@@ -182,7 +183,7 @@ class _BooksGridPageState extends State<BooksGridPage> {
 
 /// My Library placeholder page
 
-import '../widgets/custom_shelves_list.dart';
+
 
 class MyLibraryPage extends StatefulWidget {
   const MyLibraryPage({super.key});
