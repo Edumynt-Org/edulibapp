@@ -2,24 +2,33 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:powersync/powersync.dart' as ps;
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../config/app_config.dart';
 import '../../domain/repositories/sync_connector.dart';
 import '../../domain/models/sync_status.dart' as domain;
 
-class AnonymousConnector extends ps.PowerSyncBackendConnector {
+class DirectusBackendConnector extends ps.PowerSyncBackendConnector {
   final String tokenEndpoint;
   final String endpoint;
+  final FlutterSecureStorage secureStorage;
 
-  AnonymousConnector({
+  DirectusBackendConnector({
     String? tokenEndpoint,
     String? endpoint,
+    this.secureStorage = const FlutterSecureStorage(),
   })  : tokenEndpoint = tokenEndpoint ?? '${AppConfig.directusUrl}/powersync/token',
         endpoint = endpoint ?? AppConfig.powersyncUrl;
 
   @override
   Future<ps.PowerSyncCredentials?> fetchCredentials() async {
     try {
-      final response = await http.get(Uri.parse(tokenEndpoint));
+      final token = await secureStorage.read(key: 'access_token');
+      final headers = <String, String>{};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      
+      final response = await http.get(Uri.parse(tokenEndpoint), headers: headers);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return ps.PowerSyncCredentials(
@@ -31,7 +40,6 @@ class AnonymousConnector extends ps.PowerSyncBackendConnector {
       debugPrint('Failed to fetch PowerSync token from API: $e');
     }
 
-    // Fallback: return endpoint with empty token (will fail gracefully)
     return ps.PowerSyncCredentials(
       endpoint: endpoint,
       token: '',
@@ -42,10 +50,44 @@ class AnonymousConnector extends ps.PowerSyncBackendConnector {
   Future<void> uploadData(ps.PowerSyncDatabase database) async {
     final batch = await database.getCrudBatch();
     if (batch == null) return;
-    
-    // For now, we are in read-only guest mode. Just complete the batch to discard local changes 
-    // and prevent the upload loop from getting permanently blocked.
-    await batch.complete();
+
+    try {
+      final token = await secureStorage.read(key: 'access_token');
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      for (var op in batch.crud) {
+        var opType = op.op.name; // 'put', 'patch', 'delete'
+        final isCreate = opType == 'put';
+        final url = Uri.parse('${AppConfig.directusUrl}/items/${op.table}${isCreate ? '' : '/${op.id}'}');
+        http.Response res;
+        
+        if (isCreate) {
+          final data = {'id': op.id, ...?op.opData};
+          res = await http.post(url, headers: headers, body: jsonEncode(data));
+        } else if (opType == 'patch') {
+          res = await http.patch(url, headers: headers, body: jsonEncode(op.opData));
+        } else {
+          res = await http.delete(url, headers: headers);
+        }
+
+        if (res.statusCode >= 400) {
+          debugPrint('Upload error for ${op.table}: ${res.body}');
+          if (res.statusCode >= 500) {
+            throw Exception('Server error during upload'); // Force retry
+          }
+        }
+      }
+
+      await batch.complete();
+    } catch (e) {
+      debugPrint('Data upload error: $e');
+      rethrow;
+    }
   }
 }
 
@@ -55,7 +97,7 @@ class PowerSyncSyncConnector implements ISyncConnector {
   bool _isConnecting = false;
 
   PowerSyncSyncConnector(this._db, {ps.PowerSyncBackendConnector? connector}) 
-      : _connector = connector ?? AnonymousConnector();
+      : _connector = connector ?? DirectusBackendConnector();
 
   @override
   Future<void> connect() async {
