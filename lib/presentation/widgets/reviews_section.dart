@@ -48,11 +48,11 @@ class _ReviewsSectionState extends State<ReviewsSection> {
   }
 
   Future<void> _checkPendingReview() async {
+    final authRepo = context.read<IAuthRepository>();
     final prefs = await SharedPreferences.getInstance();
     final pending = prefs.getString('pending_review_${widget.bookId}');
     if (pending == 'open') {
       await prefs.remove('pending_review_${widget.bookId}');
-      final authRepo = context.read<IAuthRepository>();
       final user = await authRepo.getCurrentUser();
       if (!user.isAnonymous) {
         if (mounted) {
@@ -167,7 +167,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
             ReviewCard(review: r),
             const Divider(),
           ],
-        )).toList(),
+        )),
       ],
     );
   }
@@ -332,7 +332,9 @@ class _ReviewFormState extends State<ReviewForm> {
       ));
       widget.onSubmitted();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to publish review')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to publish review')));
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

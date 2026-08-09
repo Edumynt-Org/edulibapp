@@ -110,7 +110,7 @@ class _CustomShelvesListState extends State<CustomShelvesList> {
                           isPrivate,
                           description: descController.text.trim().isNotEmpty ? descController.text.trim() : null,
                         );
-                        if (mounted) {
+                        if (ctx.mounted) {
                           Navigator.pop(ctx);
                           _loadShelves();
                         }

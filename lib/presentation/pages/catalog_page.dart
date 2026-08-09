@@ -6,7 +6,6 @@ import '../../domain/models/book.dart';
 import 'book_details_page.dart';
 import 'search_page.dart';
 import 'login_page.dart';
-import '../../domain/repositories/auth_repository.dart';
 
 class CatalogPage extends StatelessWidget {
   const CatalogPage({super.key});

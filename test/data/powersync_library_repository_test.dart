@@ -12,7 +12,6 @@ void main() {
   group('PowerSync Integration - edulibapp', () {
     late PowerSyncDatabase mockDb;
     late PowerSyncLibraryRepository repo;
-    late PowerSyncSyncConnector connector;
     final dbPath = 'test_db.sqlite';
 
     setUp(() async {
@@ -36,7 +35,6 @@ void main() {
       await configureFts(mockDb);
 
       repo = PowerSyncLibraryRepository(mockDb);
-      connector = PowerSyncSyncConnector(mockDb);
     });
 
     tearDown(() async {

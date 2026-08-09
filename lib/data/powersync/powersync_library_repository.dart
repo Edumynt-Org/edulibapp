@@ -922,7 +922,7 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
     final directusUrl = AppConfig.directusUrl;
     String? getCoverUrl(String? coverId) {
       if (coverId == null) return null;
-      return '\$directusUrl/assets/\$coverId';
+      return '$directusUrl/assets/$coverId';
     }
 
     return rows.map((r) {
@@ -955,7 +955,6 @@ class PowerSyncLibraryRepository implements ILibraryRepository {
       final row = await _db.getOptional('SELECT current_streak, last_streak_date FROM profiles WHERE id = ?', [profileId]);
       if (row == null) return;
       
-      final currentStreak = row['current_streak'] as int? ?? 0;
       final lastStreakDateStr = row['last_streak_date'] as String?;
       
       final now = DateTime.now();

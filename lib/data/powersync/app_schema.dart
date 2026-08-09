@@ -250,4 +250,33 @@ const appSchema = Schema([
   ], indexes: [
     Index('profile', [IndexedColumn('profile')]),
   ]),
+  Table('user_shelves', [
+    Column.text('profile_id'),
+    Column.text('name'),
+    Column.text('slug'),
+    Column.text('description'),
+    Column.integer('is_private'),
+    Column.integer('sort_order'),
+    Column.text('date_created'),
+    Column.text('date_updated'),
+  ], indexes: [
+    Index('profile_id', [IndexedColumn('profile_id')]),
+    Index('slug', [IndexedColumn('slug')]),
+  ]),
+  Table('user_shelf_items', [
+    Column.text('shelf_id'),
+    Column.text('book_id'),
+    Column.text('date_created'),
+  ], indexes: [
+    Index('shelf_id', [IndexedColumn('shelf_id')]),
+    Index('book_id', [IndexedColumn('book_id')]),
+  ]),
+  Table('follows', [
+    Column.text('follower'),
+    Column.text('following'),
+    Column.text('date_created'),
+  ], indexes: [
+    Index('follower', [IndexedColumn('follower')]),
+    Index('following', [IndexedColumn('following')]),
+  ]),
 ]);

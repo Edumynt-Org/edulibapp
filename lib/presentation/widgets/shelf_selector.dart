@@ -27,6 +27,7 @@ class _ShelfSelectorState extends State<ShelfSelector> {
 
   Future<void> _checkAuthAndLoad() async {
     final authRepo = context.read<IAuthRepository>();
+    final libRepo = context.read<ILibraryRepository>();
     final user = await authRepo.getCurrentUser();
     
     final isAuth = !user.isAnonymous;
@@ -37,7 +38,6 @@ class _ShelfSelectorState extends State<ShelfSelector> {
     }
 
     if (isAuth) {
-      final libRepo = context.read<ILibraryRepository>();
       final shelves = await libRepo.getUserShelves();
       if (mounted) {
         setState(() {

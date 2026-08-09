@@ -13,7 +13,7 @@ class AnonymousConnector extends ps.PowerSyncBackendConnector {
   AnonymousConnector({
     String? tokenEndpoint,
     String? endpoint,
-  })  : tokenEndpoint = tokenEndpoint ?? '${AppConfig.directusUrl.replaceFirst(RegExp(r':\d+$'), ':3000')}/api/powersync-token',
+  })  : tokenEndpoint = tokenEndpoint ?? '${AppConfig.directusUrl}/powersync/token',
         endpoint = endpoint ?? AppConfig.powersyncUrl;
 
   @override

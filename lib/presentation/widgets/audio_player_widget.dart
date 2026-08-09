@@ -203,7 +203,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     if (d == null) return "0:00";
     final min = d.inMinutes;
     final sec = d.inSeconds % 60;
-    return "\$min:\${sec.toString().padLeft(2, '0')}";
+    return "$min:${sec.toString().padLeft(2, '0')}";
   }
 
   @override

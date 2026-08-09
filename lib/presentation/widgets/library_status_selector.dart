@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/library_repository.dart';
-import '../pages/login_page.dart';
+
 
 class LibraryStatusSelector extends StatefulWidget {
   final String bookId;
@@ -26,8 +25,6 @@ class _LibraryStatusSelectorState extends State<LibraryStatusSelector> {
 
   Future<void> _checkPendingAction() async {
     final prefs = await SharedPreferences.getInstance();
-    final authRepo = context.read<IAuthRepository>();
-    final currentUser = await authRepo.getCurrentUser();
     
     final pendingStatus = prefs.getString('pending_status_${widget.bookId}');
     if (pendingStatus != null) {
@@ -56,9 +53,6 @@ class _LibraryStatusSelectorState extends State<LibraryStatusSelector> {
   }
 
   Future<void> _handleStatusSelect(String newStatus) async {
-    final authRepo = context.read<IAuthRepository>();
-    final currentUser = await authRepo.getCurrentUser();
-
     await _updateStatus(newStatus);
   }
 

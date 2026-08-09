@@ -308,8 +308,7 @@ class _ReaderEngineState extends State<ReaderEngine> {
   Widget build(BuildContext context) {
     if (_isLoadingPrefs) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    final theme = Theme.of(context);
-    
+
     Color bgColor;
     Color textColor;
     switch (_prefs.theme) {
