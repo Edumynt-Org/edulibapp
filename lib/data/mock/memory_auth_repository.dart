@@ -60,7 +60,7 @@ class MemoryAuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<void> requestPasswordReset(String email, String resetUrl) async {
+  Future<void> requestPasswordReset(String email) async {
     // No-op for memory repo
   }
 
