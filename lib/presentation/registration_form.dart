@@ -115,6 +115,24 @@ class _RegistrationFormState extends State<RegistrationForm> {
             ),
             child: const Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Already have an account?', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Sign in', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            child: Text('Skip for now', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          ),
         ],
       ),
     );

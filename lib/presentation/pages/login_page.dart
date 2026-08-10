@@ -178,6 +178,11 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Skip for now', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                ),
               ],
             ),
           ),
