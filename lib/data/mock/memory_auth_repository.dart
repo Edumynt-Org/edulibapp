@@ -18,9 +18,17 @@ class MemoryAuthRepository implements IAuthRepository {
     return _currentUser;
   }
   @override
-  Future<AppUser> register(String email, String password, String displayName, String username) async {
-    debugPrint('Mock: Registering user $username ($email)');
-    return _currentUser;
+  Future<AppUser> register(String email, String password, String firstName, String lastName) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final newUser = AppUser(
+      id: 'mock_user_${DateTime.now().millisecondsSinceEpoch}',
+      email: email,
+      displayName: '$firstName $lastName'.trim(),
+      role: 'reader',
+      isAnonymous: false,
+    );
+    _currentUser = newUser;
+    return newUser;
   }
 
   @override

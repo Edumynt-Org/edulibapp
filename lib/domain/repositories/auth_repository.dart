@@ -6,5 +6,5 @@ abstract class IAuthRepository {
   Future<void> logout();
   Future<void> refreshSession();
   Future<void> migrateGuestState(String newProfileId);
-  Future<AppUser> register(String email, String password, String displayName, String username);
+  Future<AppUser> register(String email, String password, String firstName, String lastName);
 }

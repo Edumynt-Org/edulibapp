@@ -223,18 +223,14 @@ const appSchema = Schema([
     Index('book', [IndexedColumn('book')]),
     Index('profile', [IndexedColumn('profile')]),
   ]),
-  Table('profiles', [
+  Table('user_profiles', [
     Column.text('user'),
-    Column.text('status'),
     Column.text('username'),
-    Column.text('display_name'),
-    Column.text('avatar'),
     Column.text('bio'),
-    Column.text('website_url'),
-    Column.text('location'),
-    Column.integer('is_verified'),
     Column.integer('current_streak'),
     Column.text('last_streak_date'),
+    Column.text('date_created'),
+    Column.text('date_updated'),
   ]),
   Table('achievements', [
     Column.text('name'),

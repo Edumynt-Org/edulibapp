@@ -25,8 +25,8 @@ class _RegisterPageState extends State<RegisterPage> {
       await authRepository.register(
         formData['email']!,
         formData['password']!,
-        formData['fullName']!,
-        formData['username']!,
+        formData['firstName']!,
+        formData['lastName']!,
       );
 
       if (mounted) {

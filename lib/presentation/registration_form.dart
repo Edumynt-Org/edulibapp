@@ -14,8 +14,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
   
   String email = '';
   String password = '';
-  String fullName = '';
-  String username = '';
+  String firstName = '';
+  String lastName = '';
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
@@ -24,8 +24,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
         widget.onSubmit!({
           'email': email,
           'password': password,
-          'fullName': fullName,
-          'username': username,
+          'firstName': firstName,
+          'lastName': lastName,
         });
       }
     }
@@ -36,56 +36,84 @@ class _RegistrationFormState extends State<RegistrationForm> {
     return Form(
       key: _formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  key: const Key('first_name_field'),
+                  decoration: InputDecoration(
+                    labelText: 'First Name',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    filled: true,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Required';
+                    return null;
+                  },
+                  onSaved: (value) => firstName = value!,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  key: const Key('last_name_field'),
+                  decoration: InputDecoration(
+                    labelText: 'Last Name',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    filled: true,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Required';
+                    return null;
+                  },
+                  onSaved: (value) => lastName = value!,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           TextFormField(
             key: const Key('email_field'),
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(
+              labelText: 'Email Address',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+            ),
+            keyboardType: TextInputType.emailAddress,
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Email is required';
-              }
+              if (value == null || value.isEmpty) return 'Required';
               return null;
             },
             onSaved: (value) => email = value!,
           ),
+          const SizedBox(height: 16),
           TextFormField(
             key: const Key('password_field'),
-            decoration: const InputDecoration(labelText: 'Password'),
+            decoration: InputDecoration(
+              labelText: 'Password',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+            ),
             obscureText: true,
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Password is required';
-              }
+              if (value == null || value.isEmpty) return 'Required';
               return null;
             },
             onSaved: (value) => password = value!,
           ),
-          TextFormField(
-            key: const Key('full_name_field'),
-            decoration: const InputDecoration(labelText: 'Full Name'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Full Name is required';
-              }
-              return null;
-            },
-            onSaved: (value) => fullName = value!,
-          ),
-          TextFormField(
-            key: const Key('username_field'),
-            decoration: const InputDecoration(labelText: 'Username'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Username is required';
-              }
-              return null;
-            },
-            onSaved: (value) => username = value!,
-          ),
+          const SizedBox(height: 24),
           ElevatedButton(
             key: const Key('register_button'),
             onPressed: _submit,
-            child: const Text('Register'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            ),
+            child: const Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

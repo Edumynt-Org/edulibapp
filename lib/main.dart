@@ -9,9 +9,11 @@ import 'config/app_config.dart';
 
 import 'data/powersync/app_schema.dart';
 import 'data/powersync/powersync_library_repository.dart';
+import 'data/powersync/powersync_profile_repository.dart';
 import 'data/powersync/powersync_sync_connector.dart';
 import 'data/directus/directus_auth_repository.dart';
 import 'domain/repositories/library_repository.dart';
+import 'domain/repositories/profile_repository.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'presentation/pages/app_shell.dart';
 import 'application/services/audio_player_service.dart';
@@ -36,6 +38,7 @@ void main() async {
 
   // Initialize Repositories
   final libraryRepository = PowerSyncLibraryRepository(db);
+  final profileRepository = PowerSyncProfileRepository(db);
   final authRepository = DirectusAuthRepository(
     baseUrl: AppConfig.directusUrl,
     client: http.Client(),
@@ -45,17 +48,20 @@ void main() async {
   runApp(MyApp(
     libraryRepository: libraryRepository,
     authRepository: authRepository,
+    profileRepository: profileRepository,
   ));
 }
 
 class MyApp extends StatelessWidget {
   final ILibraryRepository libraryRepository;
   final IAuthRepository authRepository;
+  final IProfileRepository profileRepository;
 
   const MyApp({
     super.key,
     required this.libraryRepository,
     required this.authRepository,
+    required this.profileRepository,
   });
 
   @override
@@ -64,6 +70,7 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<ILibraryRepository>.value(value: libraryRepository),
         Provider<IAuthRepository>.value(value: authRepository),
+        Provider<IProfileRepository>.value(value: profileRepository),
         ChangeNotifierProvider<AudioPlayerService>(
           create: (_) => AudioPlayerService(libraryRepository),
         ),

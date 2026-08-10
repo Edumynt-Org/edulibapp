@@ -6,6 +6,7 @@ import '../../domain/repositories/library_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/models/review.dart';
 import '../pages/login_page.dart';
+import '../pages/profile_page.dart';
 
 class ReviewsSection extends StatefulWidget {
   final String bookId;
@@ -216,7 +217,43 @@ class _ReviewCardState extends State<ReviewCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Reader review', style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProfilePage(username: widget.review.profileId),
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Colors.blue.shade100,
+                      child: Text(
+                        widget.review.profileId.isNotEmpty ? widget.review.profileId.substring(0, 1).toUpperCase() : '?',
+                        style: TextStyle(fontSize: 14, color: Colors.blue.shade900, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProfilePage(username: widget.review.profileId),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Reader review',
+                      style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                    ),
+                  ),
+                ],
+              ),
               StarRating(rating: widget.review.rating),
             ],
           ),

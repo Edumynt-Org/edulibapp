@@ -188,42 +188,44 @@ class DirectusAuthRepository implements IAuthRepository {
 
   @override
   Future<void> migrateGuestState(String newProfileId) async {
-    throw UnimplementedError();
+    if (syncConnector != null) {
+      try {
+        await syncConnector!.migrateGuestData(newProfileId);
+      } catch (e) {
+        throw Exception('Failed to migrate guest data: $e');
+      }
+    }
   }
 
   @override
-  Future<AppUser> register(String email, String password, String displayName, String username) async {
+  Future<AppUser> register(String email, String password, String firstName, String lastName) async {
     final response = await client.post(
-      Uri.parse('$baseUrl/users'),
+      Uri.parse('$baseUrl/users/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email,
         'password': password,
-        'first_name': displayName,
-        'username': username,
-        'role': '0e0d3c31-4754-4856-bbe8-71ff7803e082',
+        'first_name': firstName,
+        'last_name': lastName,
+        'verification_url': 'https://edumynt.org/verify-email',
       }),
     );
 
-    final result = jsonDecode(response.body);
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
+    if (response.statusCode != 200 && response.statusCode != 201 && response.statusCode != 204) {
+      final result = jsonDecode(response.body);
       final errorMessage = (result['errors'] != null && result['errors'].isNotEmpty)
           ? result['errors'][0]['message']
           : 'Registration failed';
       throw Exception(errorMessage);
     }
 
-    if (syncConnector != null) {
-      await syncConnector!.migrateGuestData(result['data']['id']);
-    }
-
+    // Directus returns 204 No Content on successful registration to prevent information leakage
     return AppUser(
-      id: result['data']['id'],
-      email: result['data']['email'],
-      displayName: result['data']['first_name'],
-      role: '0e0d3c31-4754-4856-bbe8-71ff7803e082',
-      isAnonymous: false,
+      id: 'pending',
+      email: email,
+      displayName: firstName,
+      username: firstName.isNotEmpty ? firstName : email.split('@')[0],
+      role: 'pending',
     );
   }
 }

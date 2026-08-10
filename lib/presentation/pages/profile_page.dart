@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/repositories/library_repository.dart';
+import '../../domain/repositories/profile_repository.dart';
 import '../../domain/models/user_shelf.dart';
+import '../widgets/follow_button.dart';
 import 'shelf_page.dart';
 import 'milestones_tab.dart';
 
@@ -116,6 +118,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                 ],
+              ),
+              const Spacer(),
+              FollowButton(
+                targetProfileId: widget.username,
+                repository: context.read<IProfileRepository>(),
               ),
             ],
           ),

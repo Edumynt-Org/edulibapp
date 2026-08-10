@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../domain/repositories/profile_repository.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../pages/login_page.dart';
 
 class FollowButton extends StatefulWidget {
   final String targetProfileId;
@@ -26,6 +29,12 @@ class _FollowButtonState extends State<FollowButton> {
   }
 
   Future<void> _checkStatus() async {
+    final authRepo = context.read<IAuthRepository>();
+    final user = await authRepo.getCurrentUser();
+    if (!user.isAnonymous) {
+      widget.repository.setCurrentUserId(user.id);
+    }
+    
     final status = await widget.repository.checkIsFollowing(widget.targetProfileId);
     if (mounted) {
       setState(() {
@@ -35,7 +44,42 @@ class _FollowButtonState extends State<FollowButton> {
     }
   }
 
+  void _showAuthDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign in to follow'),
+        content: const Text('Create an account or sign in to build your reading network.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              ).then((_) => _checkStatus());
+            },
+            child: const Text('Sign In'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _toggleFollow() async {
+    final authRepo = context.read<IAuthRepository>();
+    final user = await authRepo.getCurrentUser();
+    
+    if (user.isAnonymous) {
+      _showAuthDialog();
+      return;
+    }
+    
+    widget.repository.setCurrentUserId(user.id);
     final previousState = _isFollowing;
     
     // Optimistic UI update
