@@ -58,4 +58,14 @@ class MemoryAuthRepository implements IAuthRepository {
   Future<void> migrateGuestState(String newProfileId) async {
     // Simulated guest state migration
   }
+
+  @override
+  Future<void> requestPasswordReset(String email, String resetUrl) async {
+    // No-op for memory repo
+  }
+
+  @override
+  Future<void> resetPassword(String token, String password) async {
+    // No-op for memory repo
+  }
 }
